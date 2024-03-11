@@ -30,6 +30,7 @@ import {
   MultiSelect,
   InlineFieldRow,
   InlineField,
+  Select,
 } from '@grafana/ui';
 
 import { getPreviewPanelFor } from './AutomaticMetricQueries/previewPanel';
@@ -40,6 +41,7 @@ import {
   CalculateDistanceFactor,
   getHeuristicByMetricFactorCalculator,
   getLevenDistanceFactorCalculator,
+  sortMetrics,
   sortRelatedMetrics,
 } from './relatedMetrics';
 import { getVariablesWithMetricConstant, trailDS, VAR_DATASOURCE, VAR_FILTERS_EXPR, VAR_METRIC_NAMES } from './shared';
@@ -184,10 +186,14 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
 
     const sortedMetricNames =
       metric !== undefined
-        ? sortRelatedMetrics(metricNames, this._activeRelatedMetricHeuristicCalculators)
-        : metricNames;
+        ? sortRelatedMetrics([...metricNames], this._activeRelatedMetricHeuristicCalculators)
+        : (this._activeMetricSortHeuristicCalculator &&
+            sortMetrics([...metricNames], this._activeMetricSortHeuristicCalculator)) ||
+          metricNames;
     const metricsMap: Record<string, MetricPanel> = {};
     const metricsLimit = 120;
+
+    console.log('sortedMetricNames', this._activeMetricSortHeuristicCalculator, sortedMetricNames.slice(0, 25));
 
     // Clear absent metrics from cache
     Object.keys(this.previewCache).forEach((metric) => {
@@ -316,6 +322,14 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
     this.buildLayout();
   }
 
+  private _activeMetricSortHeuristicCalculator: CalculateDistanceFactor | undefined = undefined;
+
+  private setActiveMetricSortHeuristicCalculator(heuristicCalculator: CalculateDistanceFactor | undefined) {
+    this._activeMetricSortHeuristicCalculator = heuristicCalculator;
+    this.updateMetrics(false);
+    this.buildLayout();
+  }
+
   public static Component = ({ model }: SceneComponentProps<MetricSelectScene>) => {
     const { searchQuery, showPreviews, body } = model.useState();
     const { children } = body.useState();
@@ -327,8 +341,10 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
 
     const isLoading = metricNamesStatus.isLoading && children.length === 0;
 
-    const [selectedRelatedMetricSortHeuristics, setSelectedRelatedMetricSortHeuristics] = useState<string[]>(['leven']);
+    const [selectedMetricSortHeuristic, setSelectedMetricSortHeuristic] = useState('unsorted');
+    const [metricSortHeuristicLoading, setMetricSortHeuristicLoading] = useState(false);
 
+    const [selectedRelatedMetricSortHeuristics, setSelectedRelatedMetricSortHeuristics] = useState<string[]>(['leven']);
     const [relatedMetricSortHeuristicsLoading, setRelatedMetricSortHeuristicsLoading] = useState(false);
 
     const blockingMessage = isLoading
@@ -344,6 +360,13 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
 
     const relatedMetricHeuristicOptions: Array<SelectableValue<string>> =
       integrations?.relatedMetricSortHeuristics.map((heuristic) => ({
+        label: heuristic.label,
+        value: heuristic.id,
+        description: heuristic.description,
+      })) || [];
+
+    const metricSortHeuristicOptions: Array<SelectableValue<string>> =
+      integrations?.metricSorteHeuristics.map((heuristic) => ({
         label: heuristic.label,
         value: heuristic.id,
         description: heuristic.description,
@@ -387,6 +410,33 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
       selectedRelatedMetricSortHeuristics,
     ]);
 
+    useEffect(() => {
+      if (!selectedMetric) {
+        const selectedHeuristic = integrations?.metricSorteHeuristics.find(
+          (heuristic) => selectedMetricSortHeuristic === heuristic.id
+        );
+
+        if (selectedHeuristic === undefined) {
+          model.setActiveMetricSortHeuristicCalculator(undefined);
+          return;
+        }
+
+        setMetricSortHeuristicLoading(true);
+        selectedHeuristic().then((heuristicMap) => {
+          const calculator = getHeuristicByMetricFactorCalculator(heuristicMap);
+          model.setActiveMetricSortHeuristicCalculator(calculator);
+          setMetricSortHeuristicLoading(false);
+        });
+      }
+    }, [
+      model,
+      model.setActiveMetricSortHeuristicCalculator,
+      selectedMetric,
+      integrations,
+      selectedRelatedMetricSortHeuristics,
+      selectedMetricSortHeuristic,
+    ]);
+
     return (
       <div className={styles.container}>
         <div className={styles.header}>
@@ -399,6 +449,28 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
               disabled={disableSearch}
             />
           </Field>
+          {!selectedMetric && (
+            <Field label={'Sort by'} className={styles.sortField}>
+              <Select
+                width={32}
+                prefix={metricSortHeuristicLoading ? <Icon name="fa fa-spinner" /> : <Icon name="check-circle" />}
+                value={selectedMetricSortHeuristic}
+                options={[
+                  {
+                    label: 'Unsorted',
+                    value: 'unsorted',
+                    description: 'Do not sort metrics.',
+                  },
+                  ...metricSortHeuristicOptions,
+                ]}
+                onChange={({ value }) => {
+                  if (value) {
+                    setSelectedMetricSortHeuristic(value);
+                  }
+                }}
+              />
+            </Field>
+          )}
           <InlineSwitch
             showLabel={true}
             label="Show previews"
@@ -412,6 +484,8 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
             <InlineFieldRow>
               <InlineField label={'Related metrics by'}>
                 <MultiSelect
+                  hideSelectedOptions={false}
+                  backspaceRemovesValue={false}
                   width={64}
                   prefix={
                     relatedMetricSortHeuristicsLoading ? <Icon name="fa fa-spinner" /> : <Icon name="check-circle" />
@@ -427,8 +501,6 @@ export class MetricSelectScene extends SceneObjectBase<MetricSelectSceneState> {
                     ...relatedMetricHeuristicOptions,
                   ]}
                   onChange={(options) => {
-                    console.log('HEY OPTIONS...', options);
-
                     setSelectedRelatedMetricSortHeuristics(options.map((option) => option.value).filter(isString));
                   }}
                 />
@@ -494,6 +566,9 @@ function getStyles(theme: GrafanaTheme2) {
     }),
     searchField: css({
       flexGrow: 1,
+      marginBottom: 0,
+    }),
+    sortField: css({
       marginBottom: 0,
     }),
   };
