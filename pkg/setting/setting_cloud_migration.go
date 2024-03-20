@@ -6,7 +6,6 @@ import (
 
 type CloudMigrationSettings struct {
 	IsTarget                  bool
-	GcomAPIURL                string
 	GcomAPIToken              string
 	FetchInstanceTimeout      time.Duration
 	CreateAccessPolicyTimeout time.Duration
@@ -18,7 +17,6 @@ type CloudMigrationSettings struct {
 func (cfg *Cfg) readCloudMigrationSettings() {
 	cloudMigration := cfg.Raw.Section("cloud_migration")
 	cfg.CloudMigration.IsTarget = cloudMigration.Key("is_target").MustBool(false)
-	cfg.CloudMigration.GcomAPIURL = cloudMigration.Key("gcom_api_url").MustString("")
 	cfg.CloudMigration.GcomAPIToken = cloudMigration.Key("gcom_api_token").MustString("")
 	cfg.CloudMigration.FetchInstanceTimeout = cloudMigration.Key("fetch_instance_timeout").MustDuration(5 * time.Second)
 	cfg.CloudMigration.CreateAccessPolicyTimeout = cloudMigration.Key("create_access_policy_timeout").MustDuration(5 * time.Second)

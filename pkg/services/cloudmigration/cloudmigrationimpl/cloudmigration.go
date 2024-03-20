@@ -66,7 +66,7 @@ func ProvideService(
 		cfg:         cfg,
 		features:    features,
 		dsService:   dsService,
-		gcomService: gcom.New(gcom.Config{ApiURL: cfg.CloudMigration.GcomAPIURL, Token: cfg.CloudMigration.GcomAPIToken}),
+		gcomService: gcom.New(gcom.Config{ApiURL: cfg.GrafanaComAPIURL, Token: cfg.CloudMigration.GcomAPIToken}),
 		tracer:      tracer,
 		metrics:     newMetrics(),
 	}
