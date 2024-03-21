@@ -22,13 +22,14 @@ var ScopeResourceInfo = common.NewResourceInfo(GROUP, VERSION,
 
 var ScopeDashboardResourceInfo = common.NewResourceInfo(GROUP, VERSION,
 	"scopedashboards", "scopedashboard", "ScopeDashboard",
-	func() runtime.Object { return &ScopeDashboard{} },
-	func() runtime.Object { return &ScopeDashboardList{} },
+	func() runtime.Object { return &ScopeDashboardBinding{} },
+	func() runtime.Object { return &ScopeDashboardBindingList{} },
 )
 
 var (
 	// SchemeGroupVersion is group version used to register these objects
-	SchemeGroupVersion = schema.GroupVersion{Group: GROUP, Version: VERSION}
+	SchemeGroupVersion   = schema.GroupVersion{Group: GROUP, Version: VERSION}
+	InternalGroupVersion = schema.GroupVersion{Group: GROUP, Version: runtime.APIVersionInternal}
 
 	// SchemaBuilder is used by standard codegen
 	SchemeBuilder      runtime.SchemeBuilder
@@ -37,18 +38,20 @@ var (
 )
 
 func init() {
-	localSchemeBuilder.Register(addKnownTypes)
+	localSchemeBuilder.Register(func(s *runtime.Scheme) error {
+		return AddKnownTypes(SchemeGroupVersion, s)
+	})
 }
 
 // Adds the list of known types to the given scheme.
-func addKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(SchemeGroupVersion,
+func AddKnownTypes(gv schema.GroupVersion, scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(gv,
 		&Scope{},
 		&ScopeList{},
-		&ScopeDashboard{},
-		&ScopeDashboardList{},
+		&ScopeDashboardBinding{},
+		&ScopeDashboardBindingList{},
 	)
-	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	metav1.AddToGroupVersion(scheme, gv)
 	return nil
 }
 

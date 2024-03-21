@@ -43,21 +43,17 @@ func (b *ScopeAPIBuilder) GetGroupVersion() schema.GroupVersion {
 }
 
 func (b *ScopeAPIBuilder) InstallSchema(scheme *runtime.Scheme) error {
-	gv := scope.SchemeGroupVersion
 	err := scope.AddToScheme(scheme)
 	if err != nil {
 		return err
 	}
 
-	// Link this version to the internal representation.
 	// This is used for server-side-apply (PATCH), and avoids the error:
 	//   "no kind is registered for the type"
-	// addKnownTypes(scheme, schema.GroupVersion{
-	// 	Group:   scope.GROUP,
-	// 	Version: runtime.APIVersionInternal,
-	// })
-	metav1.AddToGroupVersion(scheme, gv)
-	return scheme.SetVersionPriority(gv)
+	//_ = scope.AddKnownTypes(scope.InternalGroupVersion, scheme)
+
+	// Only one version right now
+	return scheme.SetVersionPriority(scope.SchemeGroupVersion)
 }
 
 func (b *ScopeAPIBuilder) GetAPIGroupInfo(

@@ -13,16 +13,24 @@ type Scope struct {
 }
 
 type ScopeSpec struct {
-	Title       string        `json:"title"`
-	Type        string        `json:"type"`
-	Description string        `json:"description"`
-	Category    string        `json:"category"`
-	Filters     []ScopeFilter `json:"filters"`
+	// The name displayed in the UI
+	Title string `json:"title"`
+	// Scope type?? should this be an enumeration
+	Type string `json:"type"`
+	// Optional scope description
+	Description string `json:"description,omitempty"`
+	// User configured category
+	Category string `json:"category,omitempty"`
+	// Filters that can get added ???
+	// +listType=atomic
+	Filters []ScopeFilter `json:"filters"`
 }
 
 type ScopeFilter struct {
-	Key      string `json:"key"`
-	Value    string `json:"value"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+
+	// TODO? should this be an enumeration? or is it really anything
 	Operator string `json:"operator"`
 }
 
@@ -34,23 +42,26 @@ type ScopeList struct {
 	Items []Scope `json:"items,omitempty"`
 }
 
+// ScopeDashboards is a list of dashboards that belong to a given scope
+// The kubernetes name for this object matches the scope name
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ScopeDashboard struct {
+type ScopeDashboardBinding struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ScopeDashboardSpec `json:"spec,omitempty"`
+	Spec ScopeDashboardBindingSpec `json:"spec"`
 }
 
-type ScopeDashboardSpec struct {
-	DashboardUIDs []string `json:"dashboardUids"`
-	ScopeUID      string   `json:"scopeUid"`
+type ScopeDashboardBindingSpec struct {
+	// List of dashboard names (eg, grafana uids)
+	// +listType=set
+	Dashboards []string `json:"dashboards"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ScopeDashboardList struct {
+type ScopeDashboardBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []ScopeDashboard `json:"items,omitempty"`
+	Items []ScopeDashboardBinding `json:"items,omitempty"`
 }

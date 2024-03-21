@@ -1,0 +1,10 @@
+apiVersion: scope.grafana.app/v0alpha1
+kind: ScopeDashboards
+metadata:
+  name: sample # note the name matches the name in 
+spec:
+  dashboards:
+  - aaa
+  - bbb
+  - ccc
+  

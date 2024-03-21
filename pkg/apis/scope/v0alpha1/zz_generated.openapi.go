@@ -16,13 +16,13 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.Scope":              schema_pkg_apis_scope_v0alpha1_Scope(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboard":     schema_pkg_apis_scope_v0alpha1_ScopeDashboard(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardList": schema_pkg_apis_scope_v0alpha1_ScopeDashboardList(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardSpec": schema_pkg_apis_scope_v0alpha1_ScopeDashboardSpec(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeFilter":        schema_pkg_apis_scope_v0alpha1_ScopeFilter(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeList":          schema_pkg_apis_scope_v0alpha1_ScopeList(ref),
-		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeSpec":          schema_pkg_apis_scope_v0alpha1_ScopeSpec(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.Scope":                     schema_pkg_apis_scope_v0alpha1_Scope(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBinding":     schema_pkg_apis_scope_v0alpha1_ScopeDashboardBinding(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBindingList": schema_pkg_apis_scope_v0alpha1_ScopeDashboardBindingList(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBindingSpec": schema_pkg_apis_scope_v0alpha1_ScopeDashboardBindingSpec(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeFilter":               schema_pkg_apis_scope_v0alpha1_ScopeFilter(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeList":                 schema_pkg_apis_scope_v0alpha1_ScopeList(ref),
+		"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeSpec":                 schema_pkg_apis_scope_v0alpha1_ScopeSpec(ref),
 	}
 }
 
@@ -66,11 +66,12 @@ func schema_pkg_apis_scope_v0alpha1_Scope(ref common.ReferenceCallback) common.O
 	}
 }
 
-func schema_pkg_apis_scope_v0alpha1_ScopeDashboard(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_scope_v0alpha1_ScopeDashboardBinding(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "ScopeDashboards is a list of dashboards that belong to a given scope The kubernetes name for this object matches the scope name",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -95,18 +96,19 @@ func schema_pkg_apis_scope_v0alpha1_ScopeDashboard(ref common.ReferenceCallback)
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardSpec"),
+							Ref:     ref("github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBindingSpec"),
 						},
 					},
 				},
+				Required: []string{"spec"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBindingSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_scope_v0alpha1_ScopeDashboardList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_scope_v0alpha1_ScopeDashboardBindingList(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -139,7 +141,7 @@ func schema_pkg_apis_scope_v0alpha1_ScopeDashboardList(ref common.ReferenceCallb
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboard"),
+										Ref:     ref("github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBinding"),
 									},
 								},
 							},
@@ -149,19 +151,25 @@ func schema_pkg_apis_scope_v0alpha1_ScopeDashboardList(ref common.ReferenceCallb
 			},
 		},
 		Dependencies: []string{
-			"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboard", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/grafana/grafana/pkg/apis/scope/v0alpha1.ScopeDashboardBinding", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
-func schema_pkg_apis_scope_v0alpha1_ScopeDashboardSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_scope_v0alpha1_ScopeDashboardBindingSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"dashboardUids": {
+					"dashboards": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "List of dashboard names (eg, grafana uids)",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -173,15 +181,8 @@ func schema_pkg_apis_scope_v0alpha1_ScopeDashboardSpec(ref common.ReferenceCallb
 							},
 						},
 					},
-					"scopeUid": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
 				},
-				Required: []string{"dashboardUids", "scopeUid"},
+				Required: []string{"dashboards"},
 			},
 		},
 	}
@@ -276,35 +277,43 @@ func schema_pkg_apis_scope_v0alpha1_ScopeSpec(ref common.ReferenceCallback) comm
 				Properties: map[string]spec.Schema{
 					"title": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "The name displayed in the UI",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "Scope type?? should this be an enumeration",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "Optional scope description",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"category": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "User configured category",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"filters": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Filters that can get added ???",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -316,7 +325,7 @@ func schema_pkg_apis_scope_v0alpha1_ScopeSpec(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"title", "type", "description", "category", "filters"},
+				Required: []string{"title", "type", "filters"},
 			},
 		},
 		Dependencies: []string{

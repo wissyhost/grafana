@@ -1,0 +1,14 @@
+apiVersion: scope.grafana.app/v0alpha1
+kind: Scope
+metadata:
+  name: sample
+spec:
+  title: A simple scope
+  type: xyz
+  description: with a description
+  category: testing
+  filters:
+  - key: service
+    operator: equals
+    value: mysql
+  
