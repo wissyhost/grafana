@@ -125,9 +125,17 @@ export class PanelPlugin<
    */
   angularPanelCtrl?: any;
 
-  constructor(panel: ComponentType<PanelProps<TOptions>> | null) {
+  constructor(
+    panel: ComponentType<PanelProps<TOptions>> | null,
+    // Although most config can be statically defined, when working with featureToggles
+    // some settings can not be configured
+    initializer?: (p: PanelPlugin<TOptions, TFieldConfigOptions>) => void
+  ) {
     super();
     this.panel = panel;
+    if (initializer) {
+      initializer(this);
+    }
   }
 
   get defaults() {

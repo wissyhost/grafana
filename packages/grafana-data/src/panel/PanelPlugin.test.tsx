@@ -61,6 +61,35 @@ describe('PanelPlugin', () => {
       expect(panel.fieldConfigRegistry.list()).toHaveLength(3);
     });
 
+    test('field config in constructor', () => {
+      const panel = new PanelPlugin(
+        () => {
+          return <div>Panel</div>;
+        },
+        (panel) => {
+          panel.useFieldConfig({
+            useCustomConfig: (builder) => {
+              builder.addCustomEditor({
+                id: 'custom',
+                path: 'custom',
+                name: 'Custom',
+                description: 'Custom field config property description',
+                // eslint-disable-next-line react/display-name
+                editor: () => <div>Editor</div>,
+                // eslint-disable-next-line react/display-name
+                override: () => <div>Editor</div>,
+                process: identityOverrideProcessor,
+                settings: {},
+                shouldApply: () => true,
+              });
+            },
+          });
+        }
+      );
+
+      expect(panel.fieldConfigRegistry.list()).toHaveLength(3);
+    });
+
     test('options UI API', () => {
       const panel = new PanelPlugin(() => {
         return <div>Panel</div>;
