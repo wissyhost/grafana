@@ -1,4 +1,5 @@
 import { PanelPlugin } from '@grafana/data';
+import { config } from '@grafana/runtime';
 import { commonOptionsBuilder } from '@grafana/ui';
 
 import { AutoEditor } from './AutoEditor';
@@ -7,9 +8,13 @@ import { XYChartPanel } from './XYChartPanel';
 import { getScatterFieldConfig } from './config';
 import { Options, FieldConfig, defaultFieldConfig } from './panelcfg.gen';
 
-export const plugin = new PanelPlugin<Options, FieldConfig>(XYChartPanel)
-  .useFieldConfig(getScatterFieldConfig(defaultFieldConfig))
-  .setPanelOptions((builder) => {
+export const plugin = new PanelPlugin<Options, FieldConfig>(XYChartPanel);
+
+function initPlugin() {
+  console.log('----------------');
+  console.log(config.featureToggles);
+
+  plugin.useFieldConfig(getScatterFieldConfig(defaultFieldConfig)).setPanelOptions((builder) => {
     builder
       .addRadio({
         path: 'seriesMapping',
@@ -41,3 +46,7 @@ export const plugin = new PanelPlugin<Options, FieldConfig>(XYChartPanel)
     commonOptionsBuilder.addTooltipOptions(builder, true);
     commonOptionsBuilder.addLegendOptions(builder);
   });
+}
+
+// initialize the plugin
+initPlugin();
