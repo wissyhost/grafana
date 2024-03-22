@@ -1054,6 +1054,7 @@ func ParseSortBy(sort string) (*SortBy, error) {
 	return sortBy, nil
 }
 
+//nolint:gocyclo
 func (s *sqlEntityServer) List(ctx context.Context, r *entity.EntityListRequest) (*entity.EntityListResponse, error) {
 	if err := s.Init(); err != nil {
 		return nil, err
@@ -1077,7 +1078,7 @@ func (s *sqlEntityServer) List(ctx context.Context, r *entity.EntityListRequest)
 
 	// query to retrieve the max resource version and entity count
 	rvMaxQuery := NewSelectQuery(s.dialect, "entity")
-	rvMaxQuery.AddRawFields("max(resource_version) as rv", "count(guid) as cnt")
+	rvMaxQuery.AddRawFields("coalesce(max(resource_version),0) as rv", "count(guid) as cnt")
 
 	// subquery to get latest resource version for each entity
 	// when we need to query from entity_history
@@ -1254,7 +1255,7 @@ func (s *sqlEntityServer) List(ctx context.Context, r *entity.EntityListRequest)
 		}
 
 		// found more than requested
-		if int64(len(rsp.Results)) >= entityQuery.limit {
+		if entityQuery.limit > 0 && int64(len(rsp.Results)) >= entityQuery.limit {
 			continueToken.StartOffset = entityQuery.offset + entityQuery.limit
 			rsp.NextPageToken = continueToken.String()
 			break
@@ -1302,7 +1303,7 @@ func (s *sqlEntityServer) watchInit(r *entity.EntityWatchRequest, w entity.Entit
 	entityQuery := selectQuery{
 		dialect:  s.dialect,
 		from:     "entity", // the table
-		limit:    100,      // r.Limit,
+		limit:    1000,     // r.Limit,
 		oneExtra: true,     // request one more than the limit (and show next token if it exists)
 	}
 
