@@ -563,6 +563,9 @@
     "drawer": {
       "close": "Fermer"
     },
+    "empty-state": {
+      "search-message": ""
+    },
     "modal": {
       "close-tooltip": "Fermer"
     },
